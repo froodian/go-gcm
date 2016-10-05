@@ -113,6 +113,7 @@ type HttpResponse struct {
 	Results      []Result `json:"results,omitempty"`
 	MessageId    int      `json:"message_id,omitempty"`
 	Error        string   `json:"error,omitempty"`
+	StatusCode   int      `json:status,omitempty`
 }
 
 // Result represents the status of a processed Http message.
@@ -192,7 +193,7 @@ func (c *httpGcmClient) send(apiKey string, m HttpMessage) (*HttpResponse, error
 	if err != nil {
 		return nil, fmt.Errorf("error sending request to HTTP connection server>%v", err)
 	}
-	gcmResp := &HttpResponse{}
+	gcmResp := &HttpResponse{StatusCode: httpResp.StatusCode}
 	body, err := ioutil.ReadAll(httpResp.Body)
 	defer httpResp.Body.Close()
 	if err != nil {
