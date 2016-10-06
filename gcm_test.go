@@ -127,7 +127,7 @@ func TestHttpClientSend(t *testing.T) {
 	c := &httpGcmClient{server.URL, httpClient, "0"}
 	response, error := c.send("apiKey", *singleTargetMessage)
 	expectedAuthHeader := "key=apiKey"
-	expResp := &HttpResponse{}
+	expResp := &HttpResponse{StatusCode: http.StatusOK}
 	err := json.Unmarshal([]byte(expectedResp), &expResp)
 	if err != nil {
 		t.Fatalf("error: %v", err)
