@@ -32,11 +32,12 @@ import (
 )
 
 const (
-	CCSAck      = "ack"
-	CCSNack     = "nack"
-	CCSControl  = "control"
-	CCSReceipt  = "receipt"
-	httpAddress = "https://gcm-http.googleapis.com/gcm/send"
+	CCSAck                           = "ack"
+	CCSNack                          = "nack"
+	CCSControl                       = "control"
+	CCSReceipt                       = "receipt"
+	CCSConnectionDrainingControlType = "CONNECTION_DRAINING"
+	httpAddress                      = "https://gcm-http.googleapis.com/gcm/send"
 
 	// For ccs the min for exponential backoff has to be 1 sec
 	ccsMinBackoff = 1 * time.Second
@@ -346,8 +347,16 @@ func (c *xmppGcmClient) listen(h MessageHandler, stop <-chan bool) error {
 			}
 			switch cm.MessageType {
 			case CCSControl:
-				// TODO(silvano): create a new connection, drop the old one 'after a while'
 				debug("control message! %v", cm)
+
+				if cm.ControlType == CCSConnectionDrainingControlType {
+					// Remove client from cache so we create a new one for any future sends.
+					xmppClients.Lock()
+					delete(xmppClients.m, c.senderID)
+					xmppClients.Unlock()
+
+					// TODO(silvano): Close the old client 'after a while'
+				}
 			case CCSReceipt:
 				debug("receipt! %v", cm)
 				// Receipt message: send ack and pass to listener.
